@@ -15,7 +15,7 @@ const Navbar = ({ isOpen }) => {
 
   return (
     <div
-      className={`font-aptos ${isOpen ? "ml-[190px]" : "ml-[30px]"} h-[92px] flex items-center justify-between bg-white shadow px-4 py-3 sm:py-5 border-b transition-all duration-300`}
+      className={`font-aptos ${isOpen ? "" : "ml-[16px]"} h-[92px] flex items-center justify-between bg-white shadow px-4 py-3 sm:py-5 border-b transition-all duration-300`}
     >
       {/* Left Section */}
       <div className="flex items-center space-x-3">
