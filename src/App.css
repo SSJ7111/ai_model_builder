@@ -1,0 +1,11 @@
+@font-face {
+  font-family: 'Aptos';
+  src: url('/fonts/Aptos-SemiBold.ttf') format('.ttf');
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Aptos';
+  src: url('/fonts/Aptos.ttf') format('.ttf');
+  font-style: normal;
+}
