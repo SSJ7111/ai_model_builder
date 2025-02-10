@@ -15,17 +15,17 @@ const Navbar = ({ isOpen }) => {
 
   return (
     <div
-      className={`font-aptos ${isOpen ? "" : "ml-[16px]"} h-[92px] flex items-center justify-between bg-white shadow px-4 py-3 sm:py-5 border-b transition-all duration-300`}
+      className={`font-aptos px-6 sm:px-8 shadow-none w-full max-w-screen-xl h-[92px] flex items-center justify-between py-3 sm:py-5 transition-all duration-300`}
     >
       {/* Left Section */}
-      <div className="flex items-center space-x-3">
+      <div className="flex items-center">
         <h1 className="font-semibold text-xl sm:text-base text-gray-800">
           AI/ML Model Builder
         </h1>
       </div>
 
       {/* Center Section */}
-      <div className="hidden sm:flex items-center bg-custom_white px-3 py-2 h-[40px] rounded-lg w-1/4">
+      <div className="hidden sm:flex items-center bg-custom_white px-4 py-2 h-[40px] rounded-lg w-1/4 min-w-[150px]">
         <img src={search_icon_one} alt="search_icon_one" className="text-gray-600 pr-2 text-xl sm:text-2xl" />
         <input
           type="text"
@@ -37,33 +37,24 @@ const Navbar = ({ isOpen }) => {
       </div>
 
       {/* Right Section */}
-      <div className="flex items-center space-x-3">
+      <div className={`flex items-center gap-x-3 ${isOpen ? "lg:mr-12" : "lg:mr-0"}`}>
         {/* Notifications */}
-        <div className="relative">
-          <button
-            className="p-2 border border-gray-200 rounded-full hover:bg-gray-200"
-            aria-label="View Notifications"
-          >
+        <div className="relative sm:hidden lg:flex md:flex">
+          <button className="p-2 border border-gray-200 rounded-full hover:bg-gray-200">
             <img src={bell_icon} alt="bell_icon" className="text-gray-700 text-lg sm:text-xl" />
           </button>
-          <span
-            className="absolute top-0 right-0 flex items-center justify-center text-[8px] sm:text-[10px] h-3 w-3 bg-yellow-500 rounded-full text-gray-800"
-            aria-hidden="true"
-          >
+          <span className="absolute top-0 right-0 flex items-center justify-center text-[8px] sm:text-[10px] h-3 w-3 bg-yellow-500 rounded-full text-gray-800">
             2
           </span>
         </div>
 
         {/* Favorites */}
-        <button
-          className="p-2 border border-gray-200 rounded-full hover:bg-gray-200"
-          aria-label="View Favorites"
-        >
-          <img src={like_icon} alt="like_icon"  className="text-gray-700 text-lg sm:text-xl" />
+        <button className="p-2 sm:hidden lg:flex md:flex border border-gray-200 rounded-full hover:bg-gray-200">
+          <img src={like_icon} alt="like_icon" className="text-gray-700 text-lg sm:text-xl" />
         </button>
 
         {/* Profile */}
-        <div className="relative border-l px-4 sm:px-6 flex items-center space-x-2">
+        <div className="relative border-l sm:mr-16 pl-2 flex items-center space-x-2">
           <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gray-300 rounded-full"></div>
           <div className="hidden sm:block">
             <p className="text-xs sm:text-sm font-medium text-gray-800">
@@ -71,16 +62,13 @@ const Navbar = ({ isOpen }) => {
             </p>
             <p className="text-xs text-gray-500">neurotic@taildo.com</p>
           </div>
-          <button
-            className="text-gray-500 hover:text-gray-700"
-            onClick={toggleProfileMenu}
-            aria-label="Toggle Profile Menu"
-          >
+          <button onClick={toggleProfileMenu} className="text-gray-500 hover:text-gray-700">
             <img src={down_arrow} alt="down_arrow" className="text-lg sm:text-xl" />
           </button>
         </div>
       </div>
     </div>
+
   );
 };
 

@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import ReactPaginate from "react-paginate";
+import { create } from "zustand";
 import more_option from "../../assets/Outline-dots-vertical.svg";
 import search_two from "../../assets/search_two.svg";
 import add_icon from "../../assets/Outline-plus-sm.svg";
@@ -17,8 +18,10 @@ import calender_icon from "../../assets/calendar.svg";
 import filter_icon from "../../assets/Filter.svg";
 import sort_icon from "../../assets/arrows-down-up.svg";
 
-const DataGridComponent = () => {
-  const initialData = Array.from({ length: 100 }, (_, index) => ({
+
+
+const useDataGridStore = create((set) => ({
+  data: Array.from({ length: 100 }, (_, index) => ({
     id: index + 1,
     modelName: `Model ${index + 1}`,
     modelType: "Extraction",
@@ -26,20 +29,42 @@ const DataGridComponent = () => {
     createdOn: "2024-02-29",
     lastTrainedOn: "2024-02-29",
     status: "Active",
-  }));
+  })),
+  searchQuery: "",
+  currentPage: 0,
+  setSearchQuery: (query) => set({ searchQuery: query, currentPage: 0 }),
+  setPage: (page) => set({ currentPage: page }),
+  addModel: (newModel) =>
+    set((state) => ({
+      data: [{ ...newModel, id: state.data.length + 1 }, ...state.data]
+    })),
+}));
 
-  const [data, setData] = useState(initialData);
-  const [filteredData, setFilteredData] = useState(data.slice(0, 10));
-  const [currentPage, setCurrentPage] = useState(0);
-  const [searchQuery, setSearchQuery] = useState("");
 
-  const { register, handleSubmit, reset, formState: { errors } } = useForm({
+const DataGridComponent = () => {
+
+  const { data, searchQuery, currentPage, setSearchQuery, setPage, addModel } = useDataGridStore();
+
+  const filteredResults = useMemo(() => {
+    return searchQuery
+      ? data.filter(
+        (row) =>
+          row.modelName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          row.description.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+      : data;
+  }, [data, searchQuery]);
+
+
+  const { register, handleSubmit, setValue, reset, formState: { errors } } = useForm({
     defaultValues: {
       modelName: "",
       modelType: "",
       description: "",
+      llmType: "Neural",
     },
   });
+
 
   const columns = useMemo(
     () => [
@@ -85,7 +110,7 @@ const DataGridComponent = () => {
             {value}
           </div>
         ),
-      },      
+      },
       {
         Header: () => (
           <div className="flex items-center">
@@ -139,36 +164,39 @@ const DataGridComponent = () => {
     []
   );
 
-  const tableInstance = useTable({ columns, data: filteredData }, useSortBy);
+  const paginatedData = useMemo(() => {
+    return filteredResults.slice(currentPage * 10, currentPage * 10 + 10);
+  }, [filteredResults, currentPage]);
+
+  const tableInstance = useTable(
+    { columns, data: paginatedData },
+    useSortBy
+  );
+
   const { getTableProps, getTableBodyProps, headerGroups, rows, prepareRow } = tableInstance;
 
+  const handleCreateModel = (formData) => {
+    addModel({
+      ...formData,
+      modelType: formData.modelType || "Classification",
+      createdOn: new Date().toISOString().split("T")[0], // Use current date
+      lastTrainedOn: new Date().toISOString().split("T")[0],
+      status: "Active",
+    });
+
+    reset(); // Reset the form
+  };
+
+
   const handleSearch = (e) => {
-    const query = e.target.value.toLowerCase();
+    const query = e.target.value;
     setSearchQuery(query);
-    const filtered = data.filter(
-      (row) =>
-        row.modelName.toLowerCase().includes(query) ||
-        row.description.toLowerCase().includes(query)
-    );
-    setFilteredData(filtered);
-    setCurrentPage(0);
   };
 
   const handlePageChange = ({ selected }) => {
-    setCurrentPage(selected);
-    const offset = selected * 10;
-    setFilteredData(data.slice(offset, offset + 10));
+    setPage(selected);
   };
 
-  const handleCreateModel = (formData) => {
-    const newData = [
-      ...data,
-      { ...formData, id: data.length + 1, createdOn: "2024-02-29", lastTrainedOn: "2024-02-29", status: "Active" },
-    ];
-    setData(newData);
-    setFilteredData(newData.slice(currentPage * 10, currentPage * 10 + 10));
-    reset();
-  };
 
   return (
     <div className="font-aptos p-6 rounded-md bg-white min-h-screen relative">
@@ -192,7 +220,7 @@ const DataGridComponent = () => {
 
               <div>
                 <Label>Model Type</Label>
-                <Select {...register("modelType", { required: "Model Type is required" })}>
+                <Select onValueChange={(value) => setValue("modelType", value)} defaultValue="">
                   <SelectTrigger>
                     <SelectValue placeholder="Select Model Type" />
                   </SelectTrigger>
@@ -203,10 +231,9 @@ const DataGridComponent = () => {
                   </SelectContent>
                 </Select>
               </div>
-
               <div>
                 <Label>LLM</Label>
-                <Select {...register("llmType", { required: "LLM Type is required" })}>
+                <Select onValueChange={(value) => setValue("llmType", value)} defaultValue="">
                   <SelectTrigger>
                     <SelectValue placeholder="Neural (recommended)" />
                   </SelectTrigger>
@@ -257,16 +284,11 @@ const DataGridComponent = () => {
           {...getTableProps()}
           className="min-w-full bg-white rounded-lg border-gray-200"
         >
-          <thead className="bg-white">
-            {headerGroups.map((headerGroup) => (
+          <thead>
+            {headerGroups.map(headerGroup => (
               <tr {...headerGroup.getHeaderGroupProps()}>
-                {headerGroup.headers.map((column) => (
-                  <th
-                    {...column.getHeaderProps()}
-                    className="p-3 font-semibold text-base sm:text-sm text-gray-600 border-b text-left whitespace-nowrap"
-                  >
-                    {column.render("Header")}
-                  </th>
+                {headerGroup.headers.map(column => (
+                  <th {...column.getHeaderProps(column.getSortByToggleProps())}>{column.render("Header")}</th>
                 ))}
               </tr>
             ))}
@@ -306,8 +328,8 @@ const DataGridComponent = () => {
           <ReactPaginate
             previousLabel={<img src={left_arrow} alt="Prev" className="bg-blue-100 rounded-full p-2" />}
             nextLabel={<img src={right_arrow} alt="Next" className="bg-blue-100 rounded-full p-2" />}
-            pageCount={Math.ceil(data.length / 10)}
-            onPageChange={handlePageChange}
+            pageCount={Math.ceil(filteredResults.length / 10)}
+            onPageChange={({ selected }) => setPage(selected)}
             className="flex justify-center items-center space-x-2 text-blue-600"
             containerClassName="flex space-x-2 items-center justify-center"
             pageClassName="flex p-2 w-[40px] h-[40px] items-center justify-center rounded-full cursor-pointer"
